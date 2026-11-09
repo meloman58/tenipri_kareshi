@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>テニプリ彼氏診断 - あなたの王子様を見つけよう！</title>
+    <style>
+        :root {
+            --primary-color: #ffb6c1; /* 可愛いピンク */
+            --secondary-color: #ffe4e1;
+            --text-color: #4a4a4a;
+            --accent-color: #ff69b4;
+            --bg-color: #fff0f5;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(255, 182, 193, 0.4);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: var(--accent-color);
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        input[type="text"] {
+            width: 80%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid var(--primary-color);
+            border-radius: 25px;
+            outline: none;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(255, 105, 180, 0.3);
+            transition: 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        .option-btn {
+            display: block;
+            width: 100%;
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            border: 2px solid #ffc0cb;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 15px;
+            font-size: 15px;
+            cursor: pointer;
+            text-align: left;
+            transition: 0.2s;
+        }
+
+        .option-btn:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .result-box {
+            background: #fff8dc;
+            border: 2px dashed #ffd700;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .history-section {
+            margin-top: 30px;
+            text-align: left;
+            border-top: 2px solid #eee;
+            padding-top: 15px;
+        }
+
+        .history-list {
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 14px;
+            background: #fafafa;
+            padding: 10px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- スタート画面 -->
+        <div id="start-screen">
+            <h1>🎾 テニプリ彼氏診断 👑</h1>
+            <p>あなたにぴったりな中学レギュラーの王子様を見つけます！<br>下の名前（またはニックネーム）を入力してね。</p>
+            <input type="text" id="username" placeholder="例：あなたのお名前"><br>
+            <button onclick="startDiagnosis()">診断スタート！</button>
+        </div>
+
+        <!-- 質問画面 -->
+        <div id="quiz-screen" class="hidden">
+            <h2 id="question-number" style="font-size: 16px; color: #888;"></h2>
+            <p id="question-text" style="font-size: 18px; font-weight: bold; margin: 20px 0;"></p>
+            <div id="options-container"></div>
+        </div>
+
+        <!-- 結果画面 -->
+        <div id="result-screen" class="hidden">
+            <h1>✨ 診断結果 ✨</h1>
+            <p><span id="result-name" style="font-weight:bold; color:var(--accent-color);"></span>さんの運命の王子様は……</p>
+            
+            <div class="result-box">
+                <h2 id="chara-name" style="color: #d2691e; margin: 5px 0;"></h2>
+                <p id="chara-school" style="font-size: 14px; color: #666; margin-bottom: 10px;"></p>
+                <p id="chara-comment" style="font-size: 15px;"></p>
+            </div>
+
+            <button onclick="restartDiagnosis()">もう一度診断する</button>
+
+            <!-- みんなの履歴一覧 -->
+            <div class="history-section">
+                <h3 style="font-size: 15px; margin-bottom: 5px;">📜 みんなの診断履歴</h3>
+                <div id="history-list" class="history-list">
+                    <p style="color: #999; text-align: center;">まだ履歴はありません</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // キャラクターデータ（一部抜粋・網羅）
+        const characters = [
+            { name: "跡部景吾", school: "氷帝学園", type: "supadari", comment: "「俺様について来い！」圧倒的な財力と愛であなたを溺愛してくれます。" },
+            { name: "幸村精市", school: "立海大附属", type: "supadari", comment: "慈愛に満ちた笑顔と美しさで、あなたを優しく包み込み導いてくれます。" },
+            { name: "手塚国光", school: "青春学園", type: "supadari", comment: "厳しさの中に深い愛情と絶対的な安心感をくれる頼れる部長彼氏。" },
+            { name: "海堂薫", school: "青春学園", type: "tsundere", comment: "「……るせーよ」照れ屋だけど、あなた一筋で実はめちゃくちゃ一途！" },
+            { name: "日吉若", school: "氷帝学園", type: "tsundere", comment: "「下剋上だ！」生意気な口を叩きつつも、内心あなたにメロメロ。" },
+            { name: "亜久津仁", school: "山吹中学校", type: "tsundere", comment: "野性味の塊。不器用すぎる愛情表現にドキッとさせられます。" },
+            { name: "越前リョーマ", school: "青春学園", type: "netsuetsu", comment: "「まだまだだね」って言いながらも、いざという時は絶対に守ってくれる！" },
+            { name: "真田弦一郎", school: "立海大附属", type: "netsuetsu", comment: "「たるんっとる！」と怒られつつも、筋が通った硬派な男気に惚れ直す彼氏。" },
+            { name: "不二周助", school: "青春学園", type: "aniya", comment: "穏やかな笑顔とミステリアスな優しさで、甘えさせてくれるお兄ちゃん彼氏。" },
+            { name: "白石蔵ノ介", school: "四天宝寺中学校", type: "aniya", comment: "「絶妙やろ？」包容力抜群で、デート中もずっと笑わせて癒やしてくれる。" },
+            { name: "忍足侑士", school: "氷帝学園", type: "mypace", comment: "関西弁のスマートな大人の色気。何を考えているか読めないミステリアスさが魅力。" },
+            { name: "仁王雅治", school: "立海大附属", type: "mypace", comment: "「プリッ」とあなたをからかいつつ、一番近くで特別な愛情をくれます。" },
+            { name: "菊丸英二", school: "青春学園", type: "wanko", comment: "「ねぇねぇ遊ぼうよ！」いつも元気いっぱいで、一緒にいるだけで笑顔になれる！" },
+            { name: "丸井ブン太", school: "立海大附属", type: "wanko", comment: "天才的な甘え上手！ケーキを一緒に食べたり、楽しくて可愛いデートができる。" },
+            { name: "遠山金太郎", school: "四天宝寺中学校", type: "wanko", comment: "天真爛漫な野生児ワンコ！まっすぐな「好き！」を全身でぶつけてくれます。" }
+        ];
+
+        // 質問データ（全4問のシンプルな例：これを拡張して16問にすることも可能！）
+        const questions = [
+            {
+                text: "休日に彼と過ごすならどんなデートがしたい？",
+                options: [
+                    { text: "高級レストランや美術館で優雅に過ごす", type: "supadari" },
+                    { text: "テーマパークやゲーセンでワイワイはしゃぐ", type: "wanko" },
+                    { text: "のんびりお散歩したり、お家でまったりする", type: "aniya" },
+                    { text: "「どこでもいいだろ」と言いつつリードしてくれる場所", type: "tsundere" }
+                ]
+            },
+            {
+                text: "あなたが落ち込んでいるとき、彼にどうしてほしい？",
+                options: [
+                    { text: "「俺について来い」と力強く引っ張って励ましてほしい", type: "netsuetsu" },
+                    { text: "何も言わずにそばにいて、美味しいものを食べさせてくれる", type: "aniya" },
+                    { text: "「仕方ねーな」と照れながら頭をポンポンしてくれる", type: "tsundere" },
+                    { text: "「フッ、面白いね」と独特な視点で気分転換させてくれる", type: "mypace" }
+                ]
+            },
+            {
+                text: "彼からサプライズでプレゼントをもらいました。それは何？",
+                options: [
+                    { text: "洗練された美しいブランドのアクセサリー", type: "supadari" },
+                    { text: "「たまたま余ったからやるよ」と照れ隠しされたもの", type: "tsundere" },
+                    { text: "「これ食べて元気出せよ！」と差し入れられた大好物", type: "wanko" },
+                    { text: "一見何に使うか分からない面白い海外の雑貨", type: "mypace" }
+                ]
+            },
+            {
+                text: "デートの帰り際、彼があなたに言った一言は？",
+                options: [
+                    { text: "「次も最高の一日にしてやるよ。楽しみにしてろ」", type: "supadari" },
+                    { text: "「……もっと一緒にいたかったとか、思ってねーし！」", type: "tsundere" },
+                    { text: "「次はもっと強くなった俺を見せるからな！」", type: "netsuetsu" },
+                    { text: "「楽しかったぁ！明日も絶対会おうな！」", type: "wanko" }
+                ]
+            }
+        ];
+
+        let currentUserName = "";
+        let currentQuestionIndex = 0;
+        let userScores = { supadari: 0, tsundere: 0, netsuetsu: 0, aniya: 0, mypace: 0, wanko: 0 };
+        let diagnosisHistory = [];
+
+        function startDiagnosis() {
+            const input = document.getElementById("username");
+            if (input.value.trim() === "") {
+                alert("お名前を入力してね！");
+                return;
+            }
+            currentUserName = input.value.trim();
+            currentQuestionIndex = 0;
+            userScores = { supadari: 0, tsundere: 0, netsuetsu: 0, aniya: 0, mypace: 0, wanko: 0 };
+            
+            document.getElementById("start-screen").classList.add("hidden");
+            document.getElementById("quiz-screen").classList.remove("hidden");
+            showQuestion();
+        }
+
+        function showQuestion() {
+            if (currentQuestionIndex < questions.length) {
+                const q = questions[currentQuestionIndex];
+                document.getElementById("question-number").innerText = `第 ${currentQuestionIndex + 1} 問 / 全 ${questions.length} 問`;
+                document.getElementById("question-text").innerText = q.text;
+                
+                const container = document.getElementById("options-container");
+                container.innerHTML = "";
+                
+                q.options.forEach(opt => {
+                    const btn = document.createElement("button");
+                    btn.className = "option-btn";
+                    btn.innerText = opt.text;
+                    btn.onclick = () => answerQuestion(opt.type);
+                    container.appendChild(btn);
+                });
+            } else {
+                showResult();
+            }
+        }
+
+        function answerQuestion(type) {
+            userScores[type]++;
+            currentQuestionIndex++;
+            showQuestion();
+        }
+
+        function showResult() {
+            document.getElementById("quiz-screen").classList.add("hidden");
+            document.getElementById("result-screen").classList.remove("hidden");
+
+            // 一番ポイントが高かったタイプを決定
+            let bestType = Object.keys(userScores).reduce((a, b) => userScores[a] > userScores[b] ? a : b);
+            
+            // 該当タイプの中からランダムに1人選ぶ
+            let matchedChars = characters.filter(c => c.type === bestType);
+            if (matchedChars.length === 0) matchedChars = characters; // フォールバック
+            let selectedChara = matchedChars[Math.floor(Math.random() * matchedChars.length)];
+
+            // 画面に表示
+            document.getElementById("result-name").innerText = currentUserName;
+            document.getElementById("chara-name").innerText = `${selectedChara.name} （${selectedChara.school}）`;
+            document.getElementById("chara-school").innerText = `【彼氏タイプ：${bestType.toUpperCase()}】`;
+            document.getElementById("chara-comment").innerText = selectedChara.comment;
+
+            // 履歴に追加
+            diagnosisHistory.unshift({ name: currentUserName, chara: selectedChara.name });
+            updateHistoryList();
+        }
+
+        function updateHistoryList() {
+            const listContainer = document.getElementById("history-list");
+            if (diagnosisHistory.length === 0) {
+                listContainer.innerHTML = `<p style="color: #999; text-align: center;">まだ履歴はありません</p>`;
+                return;
+            }
+            
+            let html = "";
+            diagnosisHistory.forEach(item => {
+                html += `<div style="padding: 4px 0; border-bottom: 1px dashed #ddd;">💖 <b>${item.name}</b> さん ➔ <b>${item.chara}</b></div>`;
+            });
+            listContainer.innerHTML = html;
+        }
+
+        function restartDiagnosis() {
+            document.getElementById("result-screen").classList.add("hidden");
+            document.getElementById("start-screen").classList.remove("hidden");
+            document.getElementById("username").value = "";
+        }
+    </script>
+</body>
+</html>
